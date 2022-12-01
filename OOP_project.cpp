@@ -1,68 +1,164 @@
 #include "project_header.h" 
-
-
-//class for SMA calculation
-class SMA{
-
-// private function for average calculation
-float average(vector<float> data, int days){
-	float average;
-	for(int i=0;i<days;i++){
-		average += data[i];
-	}
-	return average;
-}
-
-//public function for SMA calculation
-public:
-vector<float> SMA_20(vector<float> data,int days){
- 
- float avg = average(data,days);
- return data;
-}
-};
+#include "filehandling.h" 
+#include "userchoice.h"
+#include "PnL.h"
+#include "MACD.h"
 
 
 int main()
 {
-string date_temp, price_temp; //variables from file are here
+
+	int choice2;
 	vector<float>date;        //vector for date field
 	vector<float>price;       //vector for price field
+    handlefile(date,price);
 
-	string file = "AMZN.csv";
-	int i = 0;
-ifstream filename(file); //opening the file.
+	// choice of trading strategy
+	cout<<"Choose a trading strategy:"<<endl;
+	cout<<"1. Mean Reversion"<<endl;
+	cout<<"2. MACD technical indicator"<<endl;
+	cout<<"Enter your choice:";
+	cin>> choice2;
+	cout<<endl<<endl<<"What do you want to achive today?"<<endl;
 
-if (filename.is_open()) //if the file is open
+	//mean reversion strategy
+	if(choice2==1){
+	switch (userchoice(1))
 	{
-		//ignore first line
-		string line;
-		getline(filename, line);
+	case 1:
+	{
+		SMA obj1;
+		obj1.put_data(price);
+		obj1.SMA_trigger();
+		obj1.get_data();
+		break;
+	}
 
-		while (!filename.eof()) //while the end of file is NOT reached
+	case 2:
+	{
+		SMA obj1,obj2;
+		obj1.put_data(price);
+		obj2.put_data(price);
+		obj1.SMA_trigger();
+		obj2.SMA_trigger();
+
+		BuySellSignal objj1;
+		objj1.Signal_trigger(obj1,obj2);
+		objj1.getsignal();
+
+		break;
+	}
+
+	case 3:
+	{
+		SMA obj1,obj2;
+		obj1.put_data(price);
+		obj2.put_data(price);
+		obj1.SMA_trigger();
+		obj2.SMA_trigger();
+		
+		
+
+		Position pobj1;
+		pobj1.Signal_trigger(obj1,obj2);
+		pobj1.trigger_Positions(price);
+		pobj1.getpositions();
+
+		break;
+	}
+
+	case 4:
+	{
+		SMA obj1,obj2;
+		obj1.put_data(price);
+		obj2.put_data(price);
+		obj1.SMA_trigger();
+		obj2.SMA_trigger();
+		
+		PnL pnlobj1;
+		pnlobj1.Signal_trigger(obj1,obj2);
+		pnlobj1.trigger_Positions(price);
+		pnlobj1.trigger_PnL(price);
+		pnlobj1.getPnL();
+		
+		break;
+	}
+
+	case 5:
+	{
+		SMA obj1,obj2;
+		obj1.put_data(price);
+		obj2.put_data(price);
+		obj1.SMA_trigger();
+		obj2.SMA_trigger();
+		
+		PnL pnlobj1;
+		pnlobj1.Signal_trigger(obj1,obj2);
+		pnlobj1.trigger_Positions(price);
+		pnlobj1.trigger_PnL(price);
+		pnlobj1.avgPnL();
+	}
+	
+	default:
+	{
+		cout<<"\n Error: Please enter correct option"<<endl;
+		break;
+	}
+	}
+	}
+
+	//MACD strategy
+	if(choice2==2){
+		
+		SMA obj1,obj2;
+		obj1.put_data(price);
+		obj2.put_data(price);
+		obj1.SMA_trigger(26);
+		obj2.SMA_trigger(12);	
+		
+		MACD objj1;
+		SMA objsignal;
+		PnL tobj1;
+		objj1.MACD_Signal(obj1,obj2);
+		objsignal.put_data(objj1.MACD_line);
+		objsignal.SMA_trigger(15);
+		tobj1.Signal_trigger(objsignal.data_temp, objj1.MACD_line);
+		
+		switch (userchoice(2))
 		{
-			
-			getline(filename, date_temp, ',');
-			date.push_back(stof(date_temp));
-			getline(filename, price_temp, '\n');
-			price.push_back(stof(price_temp));
-			i += 1;
+		case 2: {
+		tobj1.getsignal();
+		break;
+		}
+		
+		case 3:
+		{
+		
+		tobj1.trigger_Positions(price);
+		tobj1.getpositions();
+		break;
+		}
+		case 4:
+		{
+		tobj1.trigger_Positions(price);
+		tobj1.trigger_PnL(price);
+		tobj1.getPnL();
+		break;
 		}
 
-		filename.close(); //closing the file
-		cout << "Number of entries: " << i-1 << endl;
+		case 5:
+		{
+		tobj1.trigger_Positions(price);
+		tobj1.trigger_PnL(price);
+		tobj1.avgPnL();
+		break;}
+			
+			default:{
+			cout<<"\n Error: Please enter correct option"<<endl;
+			break;
+			}
+		}
 	}
-    
-	else cout << "Unable to open file"; //if the file is not open output
-    
-    
-    for(int j=0;j<i;j++){       // check for values in the file
-    cout<<date[j]<<"\t"<<price[j]<<endl;
-    }
-
-	SMA obj1;
-	obj1.SMA_20(price,20);
-
 
 }
 
